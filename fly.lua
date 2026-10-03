@@ -1,4 +1,4 @@
--- DeltaAI Fly (Mobile, джойстик)
+-- fly
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
@@ -9,7 +9,7 @@ local speed = 60
 local bodyVel, bodyGyro
 
 local gui = Instance.new("ScreenGui")
-gui.Name = "DeltaAI_Fly"
+gui.Name = "fly"
 gui.ResetOnSpawn = false
 gui.Parent = lp:WaitForChild("PlayerGui")
 
@@ -29,7 +29,7 @@ corner.Parent = frame
 local title = Instance.new("TextLabel")
 title.Size = UDim2.new(1, 0, 0, 28)
 title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-title.Text = "DeltaAI Fly"
+title.Text = "fly"
 title.TextColor3 = Color3.fromRGB(0, 255, 120)
 title.Font = Enum.Font.GothamBold
 title.TextSize = 14
@@ -50,7 +50,7 @@ local flyBtn = Instance.new("TextButton")
 flyBtn.Size = UDim2.new(0, 180, 0, 30)
 flyBtn.Position = UDim2.new(0, 20, 0, 38)
 flyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-flyBtn.Text = "Fly: OFF"
+flyBtn.Text = "fly: off"
 flyBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
 flyBtn.Font = Enum.Font.GothamBold
 flyBtn.TextSize = 14
@@ -74,7 +74,7 @@ local speedLabel = Instance.new("TextLabel")
 speedLabel.Size = UDim2.new(0, 180, 0, 20)
 speedLabel.Position = UDim2.new(0, 20, 0, 96)
 speedLabel.BackgroundTransparency = 1
-speedLabel.Text = "Speed: " .. speed
+speedLabel.Text = "speed: " .. speed
 speedLabel.TextColor3 = Color3.fromRGB(0, 255, 120)
 speedLabel.Font = Enum.Font.Gotham
 speedLabel.TextSize = 12
@@ -83,12 +83,14 @@ speedLabel.Parent = frame
 
 local function stopFly()
     flying = false
-    flyBtn.Text = "Fly: OFF"
+    flyBtn.Text = "fly: off"
     flyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     if bodyVel then bodyVel:Destroy() bodyVel = nil end
     if bodyGyro then bodyGyro:Destroy() bodyGyro = nil end
     local char = lp.Character
     if char then
+        local hum = char:FindFirstChildOfClass("Humanoid")
+        if hum then hum.PlatformStand = false end
         local hrp = char:FindFirstChild("HumanoidRootPart")
         if hrp then
             hrp.Velocity = Vector3.zero
@@ -99,12 +101,14 @@ end
 
 local function startFly()
     flying = true
-    flyBtn.Text = "Fly: ON"
+    flyBtn.Text = "fly: on"
     flyBtn.BackgroundColor3 = Color3.fromRGB(0, 120, 60)
     local char = lp.Character
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
+    local hum = char:FindFirstChildOfClass("Humanoid")
     if not hrp then return end
+    if hum then hum.PlatformStand = true end
     bodyVel = Instance.new("BodyVelocity")
     bodyVel.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
     bodyVel.Velocity = Vector3.zero
@@ -124,23 +128,23 @@ RunService.RenderStepped:Connect(function()
     local char = lp.Character
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
-    if not hrp or not bodyVel or not bodyGyro then return end
-
     local hum = char:FindFirstChildOfClass("Humanoid")
-    if not hum then return end
+    if not hrp or not bodyVel or not bodyGyro or not hum then return end
 
-    -- берём направление из стандартного движения роблокса (джойстик)
     local move = hum.MoveDirection
-    local cam = workspace.CurrentCamera
-
     if move.Magnitude > 0 then
-        move = cam.CFrame:VectorToWorldSpace(move.Unit) * speed
+        move = move.Unit * speed
     else
         move = Vector3.zero
     end
-
     bodyVel.Velocity = move
-    bodyGyro.CFrame = cam.CFrame
+
+    local cam = workspace.CurrentCamera
+    local look = cam.CFrame.LookVector
+    local flat = Vector3.new(look.X, 0, look.Z)
+    if flat.Magnitude > 0 then
+        bodyGyro.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + flat)
+    end
 end)
 
 local dragging = false
@@ -163,7 +167,7 @@ UIS.InputChanged:Connect(function(input)
         local rel = math.clamp((mouseX - bgAbs) / bgSize, 0, 1)
         speed = math.floor(rel * 200)
         sliderFill.Size = UDim2.new(rel, 0, 1, 0)
-        speedLabel.Text = "Speed: " .. speed
+        speedLabel.Text = "speed: " .. speed
     end
 end)
 
@@ -172,7 +176,7 @@ local circle = Instance.new("TextButton")
 circle.Size = UDim2.new(0, 50, 0, 50)
 circle.Position = UDim2.new(0, 50, 0, 50)
 circle.BackgroundColor3 = Color3.fromRGB(0, 255, 120)
-circle.Text = "D"
+circle.Text = "F"
 circle.TextColor3 = Color3.fromRGB(0, 0, 0)
 circle.Font = Enum.Font.GothamBold
 circle.TextSize = 20
@@ -201,4 +205,4 @@ circle.MouseButton1Click:Connect(function()
     frame.Visible = true
     circle.Visible = false
     minimized = false
-end)
+end) 
