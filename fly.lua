@@ -115,7 +115,8 @@ local function startFly()
     bodyVel.Parent = hrp
     bodyGyro = Instance.new("BodyGyro")
     bodyGyro.MaxTorque = Vector3.new(math.huge, math.huge, math.huge)
-    bodyGyro.P = 1000
+    bodyGyro.P = 30000  -- резкий поворот
+    bodyGyro.D = 500
     bodyGyro.Parent = hrp
 end
 
@@ -131,6 +132,7 @@ RunService.RenderStepped:Connect(function()
     local hum = char:FindFirstChildOfClass("Humanoid")
     if not hrp or not bodyVel or not bodyGyro or not hum then return end
 
+    -- летим в сторону джойстика
     local move = hum.MoveDirection
     if move.Magnitude > 0 then
         move = move.Unit * speed
@@ -139,12 +141,8 @@ RunService.RenderStepped:Connect(function()
     end
     bodyVel.Velocity = move
 
-    local cam = workspace.CurrentCamera
-    local look = cam.CFrame.LookVector
-    local flat = Vector3.new(look.X, 0, look.Z)
-    if flat.Magnitude > 0 then
-        bodyGyro.CFrame = CFrame.lookAt(hrp.Position, hrp.Position + flat)
-    end
+    -- поворот вслед за камерой, включая верх-вниз
+    bodyGyro.CFrame = workspace.CurrentCamera.CFrame
 end)
 
 local dragging = false
@@ -205,4 +203,4 @@ circle.MouseButton1Click:Connect(function()
     frame.Visible = true
     circle.Visible = false
     minimized = false
-end) 
+end)
