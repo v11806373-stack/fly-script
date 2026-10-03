@@ -1,11 +1,11 @@
--- DeltaAI Fly + Speed GUI
+-- DeltaAI Fly (Mobile, джойстик)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UIS = game:GetService("UserInputService")
 local lp = Players.LocalPlayer
 
 local flying = false
-local speed = 50
+local speed = 60
 local bodyVel, bodyGyro
 
 local gui = Instance.new("ScreenGui")
@@ -125,15 +125,20 @@ RunService.RenderStepped:Connect(function()
     if not char then return end
     local hrp = char:FindFirstChild("HumanoidRootPart")
     if not hrp or not bodyVel or not bodyGyro then return end
+
+    local hum = char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+
+    -- берём направление из стандартного движения роблокса (джойстик)
+    local move = hum.MoveDirection
     local cam = workspace.CurrentCamera
-    local move = Vector3.zero
-    if UIS:IsKeyDown(Enum.KeyCode.W) then move = move + cam.CFrame.LookVector end
-    if UIS:IsKeyDown(Enum.KeyCode.S) then move = move - cam.CFrame.LookVector end
-    if UIS:IsKeyDown(Enum.KeyCode.A) then move = move - cam.CFrame.RightVector end
-    if UIS:IsKeyDown(Enum.KeyCode.D) then move = move + cam.CFrame.RightVector end
-    if UIS:IsKeyDown(Enum.KeyCode.Space) then move = move + Vector3.new(0, 1, 0) end
-    if UIS:IsKeyDown(Enum.KeyCode.LeftControl) then move = move - Vector3.new(0, 1, 0) end
-    if move.Magnitude > 0 then move = move.Unit * speed end
+
+    if move.Magnitude > 0 then
+        move = cam.CFrame:VectorToWorldSpace(move.Unit) * speed
+    else
+        move = Vector3.zero
+    end
+
     bodyVel.Velocity = move
     bodyGyro.CFrame = cam.CFrame
 end)
